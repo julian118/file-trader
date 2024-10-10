@@ -4,8 +4,13 @@ const app: Application = new Application()
 const port: number = 6969
 const router: Router = new Router()
 
-let currentlyStoredFile: Uint8Array | null = null
-let currentlyStoredFileName: string | null = null
+interface storedFile {
+  rawData: ArrayBuffer,
+  type: string
+}
+
+let currentlyStoredFile: storedFile;
+
 
 router.get("/start_web_socket", async (ctx) => {
     const socket = await ctx.upgrade()
@@ -19,27 +24,9 @@ router.get("/start_web_socket", async (ctx) => {
     }
 
     socket.onmessage = async (message: MessageEvent) => {
-        const { file, filename } = JSON.parse(message.data)
-
-        const response = JSON.stringify({
-          file: currentlyStoredFile ? Array.from(currentlyStoredFile) : null,
-          filename: currentlyStoredFileName
-        })
-        console.log("Response sent:", response)
-        socket.send(response)
-
-        console.log("Received file data:", { file, filename })
-
-        // Ensure that the incoming file is valid
-        if (file && Array.isArray(file)) {
-            currentlyStoredFile = new Uint8Array(file)
-            currentlyStoredFileName = filename
-            console.log("Stored new file:", currentlyStoredFile);
-        } else {
-            console.log("No valid file data received.")
-        }
-
-        
+        console.log(message.data)
+        socket.send(JSON.stringify(currentlyStoredFile))
+        currentlyStoredFile = JSON.parse(message.data)
     }
 })
 

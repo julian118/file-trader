@@ -1,54 +1,71 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import './App.css'
 import useWebSocket from 'react-use-websocket'
 
-interface fileMessage {
-  file: Uint8Array,
-  filename: string
+interface storedFile {
+  rawData: ArrayBuffer,
+  type: string
 }
+
 function App() {
   const url = 'ws://localhost:6969/start_web_socket'
-  const { sendMessage, lastMessage, readyState } = useWebSocket(url);
+  const { sendMessage, lastMessage } = useWebSocket(url);
 
   useEffect(() => {
     if (lastMessage !== null) {
-      const messageData: fileMessage = JSON.parse(lastMessage.data)
-      const file: Uint8Array = messageData.file
-      const filename: string = messageData.filename
-      download(file, filename)
+      console.log(lastMessage)
+      const retrievedFile = JSON.parse(lastMessage.data)
+      
+      // Make sure rawData is converted back to a Uint8Array
+      const file: storedFile = {
+        rawData: new Uint8Array(retrievedFile.data).buffer, // convert back to ArrayBuffer
+        type: retrievedFile.type
+      }
+      
+      console.log(file)
+      download(file)
     }
-  }, [lastMessage]);
+  }, [lastMessage])
 
-  function download(file: Uint8Array, filename: string) {
-    console.log('Downloading blob...')
-    const url  = URL.createObjectURL(new Blob([file]))
+  function download(file: storedFile) {
+    console.log(`Downloading file: ${file.type}`)
+    
+    // Convert array back into Uint8Array
+    const uint8Array = new Uint8Array(file.rawData)
+    const blob = new Blob([uint8Array], { type: file.type })
+    
+    const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = filename
+    a.download = file.type
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
   }
-
+  
 
   const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const files = e.target.files ? Array.from(e.target.files) : []
-    if (files.length > 0) {
-        console.log("sending file:", files[0])
-        const reader = new FileReader()
-        reader.onload = () => {
-            const arrayBuffer = reader.result as ArrayBuffer
-            const file = new Uint8Array(arrayBuffer)
-            const message: string = JSON.stringify({
-                file: Array.from(file), // Convert to plain array
-                filename: files[0].name
-            })
-            sendMessage(message)
-        }
-        reader.readAsArrayBuffer(files[0])
+    if (files.length === 0) return
+    const file = files[0]
+    console.log("sending file:", file)
+  
+    const reader = new FileReader()
+    reader.onload = () => {
+      const arrayBuffer = reader.result as ArrayBuffer
+      const message = {
+        type: file.type,
+        data: Array.from(new Uint8Array(arrayBuffer))
+      }
+      
+      sendMessage(JSON.stringify(message))
     }
+  
+    reader.readAsArrayBuffer(file)
   }
+
+
 
 
   return (
