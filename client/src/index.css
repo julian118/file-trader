@@ -28,6 +28,10 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background-image: url(../src/assets/trade.jpg);
+  background-size: 40% auto;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 h1 {
