@@ -6,6 +6,7 @@ const router: Router = new Router()
 
 interface storedFile {
   rawData: ArrayBuffer,
+  filename: string,
   type: string
 }
 

@@ -4,6 +4,7 @@ import useWebSocket from 'react-use-websocket'
 
 interface storedFile {
   rawData: ArrayBuffer,
+  filename: string,
   type: string
 }
 
@@ -19,7 +20,8 @@ function App() {
       // Make sure rawData is converted back to a Uint8Array
       const file: storedFile = {
         rawData: new Uint8Array(retrievedFile.data).buffer, // convert back to ArrayBuffer
-        type: retrievedFile.type
+        type: retrievedFile.type,
+        filename: retrievedFile.filename
       }
       
       console.log(file)
@@ -37,7 +39,8 @@ function App() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = file.type
+    a.download = file.filename
+
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -56,6 +59,7 @@ function App() {
       const arrayBuffer = reader.result as ArrayBuffer
       const message = {
         type: file.type,
+        filename: file.name,
         data: Array.from(new Uint8Array(arrayBuffer))
       }
       
