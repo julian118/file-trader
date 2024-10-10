@@ -8,7 +8,7 @@ interface storedFile {
 }
 
 function App() {
-  const url = 'ws://localhost:6969/start_web_socket'
+  const url = 'https://juliankroes-file-trade-73.deno.dev/start_web_socket'
   const { sendMessage, lastMessage } = useWebSocket(url);
 
   useEffect(() => {
